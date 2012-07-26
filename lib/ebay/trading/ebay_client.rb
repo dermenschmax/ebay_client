@@ -17,29 +17,64 @@ module Ebay
     
     class EbayClient
       
+    
+      # ------------------------------------------------------------------
+      #
+      # Ensures that EbayClient.wsdl_file_name is set. Throws an exception if not
+      #
+      # ------------------------------------------------------------------
+      def check_wsdl_file_name
+        raise "no wsdl file specified" if EbayClient.wsdl_file_name.nil?
+      end
+    
+    
       
-      # set the wsdl filename as class instance variable
+      # ------------------------------------------------------------------
+      #
+      # Ensures that @wsdl_document is set. The wsdl filename has to be set which
+      # is checked. An exception is thrown if not.
+      #
+      # ------------------------------------------------------------------
+      def check_wasabi_document
+
+        check_wsdl_file_name()
+
+        if (@wsdl_document.nil?) then
+            @wsdl_document = Wasabi::Document.new()
+            @wsdl_document.document = EbayClient.wsdl_file_name
+          end
+      end
+      
+      
+      
+      # set the class instance variables:
+      #  - wsdl filename
+      #  - wsdl_classes
       class << self
         attr_accessor :wsdl_file_name
+        attr_accessor :wsdl_classes
       end
       
       
       
       def initialize
         @wsdl_document = nil
+        wsdl_classes ||= Hash.new()
       end
       
       
       # ------------------------------------------------------------------
       #
-      # Lists all available operations (soap actions) listed in the wsdl
+      # Lists all available operations (soap actions) listed in the wsdl. The
+      # wsdl document name has to be set.
       #
       # Format:
       #     operation => { :action => soap name, :input => input type,
-      #                    :namespace => the namespace, :output=> output type}
+      #                    :namespace_identifier => the namespace, :output=> output type}
       # ------------------------------------------------------------------
       def operations
-        
+      
+        check_wasabi_document()  
         
         unless (EbayClient.wsdl_file_name.nil?)
           
@@ -59,16 +94,39 @@ module Ebay
           
           op
         end
-        
-        
       end
       
       
-    end
+      # ------------------------------------------------------------------
+      #
+      # Generates the objects you need to talk to the api. Returns an instance
+      # of a class that matches the definition of a complex type in the wsdl
+      # file of the given name.
+      #
+      # The wsdl document name has to be set.
+      #
+      # ------------------------------------------------------------------
+      def generate_type(type_name)
+        check_wasabi_document()
+      
+        cached_class = "TODO"
+        
+        nil
+      end
+      
+      
+      
+      
+      private
+      
+      
+      
+      
+      
+    end # ebay_client
     
     
     
     
-  end
-  
-end
+  end  # trading
+end   # ebay
