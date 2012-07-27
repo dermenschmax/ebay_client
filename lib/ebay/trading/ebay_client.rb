@@ -59,7 +59,7 @@ module Ebay
       
       def initialize
         @wsdl_document = nil
-        wsdl_classes ||= Hash.new()
+        EbayClient.wsdl_classes ||= Hash.new()
       end
       
       
@@ -103,15 +103,19 @@ module Ebay
       # of a class that matches the definition of a complex type in the wsdl
       # file of the given name.
       #
+      # We're caching the types we create. If necessary a class is created that
+      # matches the wsdl definition of the given type.
+      #
       # The wsdl document name has to be set.
       #
       # ------------------------------------------------------------------
       def generate_type(type_name)
-        check_wasabi_document()
-      
-        cached_class = "TODO"
         
-        nil
+        check_wasabi_document()
+        
+        type_class = EbayClient.wsdl_classes[type_name.to_sym]  || create_type(type_name)
+        
+        type_class.new()
       end
       
       
@@ -120,7 +124,28 @@ module Ebay
       private
       
       
-      
+      # ------------------------------------------------------------------
+      # Parses the wsdl document and creates a class that matches the requirements
+      # for the wsdl complex type for the given name. We generate getters and
+      # setters for each attribute.
+      #
+      # The new class is cached.
+      # ------------------------------------------------------------------
+      def create_type(type_name)
+        
+        wsdl_class = Class.new()
+        parser = @wsdl_document.parser
+        
+        parser.types[type_name].keys.each() do |m|
+        
+          attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
+          
+          wsdl_class.send(:attr_accessor, attr)
+        end
+        
+        EbayClient.wsdl_classes[type_name.to_sym] = wsdl_class
+        wsdl_class
+      end
       
       
     end # ebay_client

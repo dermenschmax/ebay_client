@@ -52,11 +52,22 @@ describe Ebay::Trading::EbayClient do
   end
   
   
-  it "should generate wsdl types" do
+  # generate type from wsdl and check methods
+  it "should generate wsdl type GetCategories" do
     wsdl_type_name = @client.operations[:get_categories][:input]
     wsdl_type = @client.generate_type(wsdl_type_name)
     
     wsdl_type.should_not be_nil
+    wsdl_type.should respond_to(:category_site_id)
+    wsdl_type.should respond_to(:category_parent)
+    wsdl_type.should respond_to(:level_limit)
+    wsdl_type.should respond_to(:view_all_nodes)
+    
+    wsdl_type.category_site_id =  5
+    wsdl_type.category_site_id.should be_equal 5
+    
+    wsdl_type.level_limit =  1
+    wsdl_type.level_limit.should be_equal 1
   end
   
 end
