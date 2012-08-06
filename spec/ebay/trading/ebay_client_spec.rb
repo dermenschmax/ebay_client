@@ -70,4 +70,19 @@ describe Ebay::Trading::EbayClient do
     wsdl_type.level_limit.should be_equal 1
   end
   
+  
+  it "should route to the sandbox by default" do
+    Ebay::Trading::EbayClient.route_to_sandbox.should be_true
+  end
+  
+  
+  #it "should execute a soap request" do
+  #  soap_action = :get_categories
+  #  soap_input = @client.generate_type(@client.operations[:get_categories][:input])
+  #  soap_input.should_not be_nil
+  #  
+  #  soap_output = @client.get_categories(soap_input, {})
+  #  soap_output.should_not be_nil
+  #end
+  
 end

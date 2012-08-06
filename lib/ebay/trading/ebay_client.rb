@@ -17,6 +17,29 @@ module Ebay
     
     class EbayClient
       
+      
+      # set the class instance variables:
+      #  - wsdl filename
+      #  - wsdl_classes
+      class << self
+        attr_accessor :wsdl_file_name
+        attr_accessor :wsdl_classes
+        attr_accessor :route_to_sandbox
+        
+      end      
+    
+    
+    
+      # ------------------------------------------------------------------
+      #
+      # ------------------------------------------------------------------      
+      def initialize
+        @wsdl_document = nil
+        EbayClient.wsdl_classes ||= Hash.new()
+        EbayClient.route_to_sandbox = true
+      end
+    
+    
     
       # ------------------------------------------------------------------
       #
@@ -42,25 +65,9 @@ module Ebay
         if (@wsdl_document.nil?) then
             @wsdl_document = Wasabi::Document.new()
             @wsdl_document.document = EbayClient.wsdl_file_name
-          end
+        end
       end
-      
-      
-      
-      # set the class instance variables:
-      #  - wsdl filename
-      #  - wsdl_classes
-      class << self
-        attr_accessor :wsdl_file_name
-        attr_accessor :wsdl_classes
-      end
-      
-      
-      
-      def initialize
-        @wsdl_document = nil
-        EbayClient.wsdl_classes ||= Hash.new()
-      end
+
       
       
       # ------------------------------------------------------------------
@@ -116,6 +123,17 @@ module Ebay
         type_class = EbayClient.wsdl_classes[type_name.to_sym]  || create_type(type_name)
         
         type_class.new()
+      end
+      
+      
+      
+      # ------------------------------------------------------------------
+      # Soap Action "GetCategories"
+      #  TODO: dynamisch?
+      # ------------------------------------------------------------------
+      def get_categories(soap_input, params)
+        
+        nil
       end
       
       
