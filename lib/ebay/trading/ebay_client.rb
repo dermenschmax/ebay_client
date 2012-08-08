@@ -1,4 +1,4 @@
-require "wasabi"
+require "savon"
 
 
 # ------------------------------------------------------------------------------
@@ -7,11 +7,10 @@ require "wasabi"
 #
 # The client parses the wsdl file of the ebay trading api and offers methods
 # matching the soap operations. The object types are generated on the fly as
-# needed.
+# needed. The parsing is done at the time of creation.
 #
 # The attributes for the authentication are here: app_id, dev_id, cert_id,
-# auth_token. They can be set via environment or by requiring a config.rb. That's
-# up to you.
+# auth_token. They can be set by requiring a config.rb. 
 # ------------------------------------------------------------------------------
 
 
@@ -49,12 +48,14 @@ module Ebay
     
     
       # ------------------------------------------------------------------
-      #
+      # 
       # ------------------------------------------------------------------      
       def initialize
-        @wsdl_document = nil
         EbayClient.wsdl_classes ||= Hash.new()
         EbayClient.route_to_sandbox = true
+        
+        @wsdl_document = nil
+        @soap_client = Savon.client File.expand_path(EbayClient.wsdl_file_name(), __FILE__)
       end
     
     
@@ -150,6 +151,14 @@ module Ebay
       #  TODO: dynamisch?
       # ------------------------------------------------------------------
       def get_categories(soap_input, params)
+        set_soap_header()
+        
+        @soap_client.wsdl.endpoint = @endpoint + "?callname=#{action}&siteid=#{@site_id}&appid=#{@app_id}&version=#{version}&routing=default"  
+        
+        TODO: Hier weiter
+        response = @soap_client.request :urn, action do  
+          soap.body = request_params
+        end
         
         nil
       end
@@ -181,6 +190,24 @@ module Ebay
         
         EbayClient.wsdl_classes[type_name.to_sym] = wsdl_class
         wsdl_class
+      end
+      
+      
+      
+      # ------------------------------------------------------------------
+      # We have to set some special values in the soap header for authentication.
+      #
+      # ------------------------------------------------------------------
+      def set_soap_header
+        client.config.soap_header = {
+          "urn:RequesterCredentials" => {
+            "urn:eBayAuthToken" =>auth_token,  
+            "urn:Credentials" => {
+              "urn:AppId" => EbayClient.app_id, "urn:DevId" => EbayClient.dev_id,
+              "urn:AuthCert" => EbayClient.cert_id
+            }
+        }
+    }
       end
       
       
