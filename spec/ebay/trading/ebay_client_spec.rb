@@ -1,4 +1,5 @@
 require "ebay/trading/ebay_client"
+require "config/config"
 
 
 describe Ebay::Trading::EbayClient do

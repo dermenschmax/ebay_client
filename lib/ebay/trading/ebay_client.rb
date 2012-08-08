@@ -8,6 +8,10 @@ require "wasabi"
 # The client parses the wsdl file of the ebay trading api and offers methods
 # matching the soap operations. The object types are generated on the fly as
 # needed.
+#
+# The attributes for the authentication are here: app_id, dev_id, cert_id,
+# auth_token. They can be set via environment or by requiring a config.rb. That's
+# up to you.
 # ------------------------------------------------------------------------------
 
 
@@ -21,11 +25,25 @@ module Ebay
       # set the class instance variables:
       #  - wsdl filename
       #  - wsdl_classes
+      #  - wsdl_version       -> the version number of the wsdl file, this will 
+      #                          be in the soap call
+      #  - route_to_sandbox   -> testing yes/no
+      #  - side_id            -> connect to which site (77 => Germany)
+      #  - app_id             -> the application id you get from the ebay dev center
+      #  - dev_id             -> get one on ebay dev
+      #  - cert_id            -> your certificate
+      #  - auth_token         -> should be obvious
       class << self
         attr_accessor :wsdl_file_name
         attr_accessor :wsdl_classes
+        attr_accessor :wsdl_version
         attr_accessor :route_to_sandbox
+        attr_accessor :site_id
         
+        attr_accessor :app_id
+        attr_accessor :dev_id
+        attr_accessor :cert_id
+        attr_accessor :auth_token
       end      
     
     
