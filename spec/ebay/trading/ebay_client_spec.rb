@@ -77,13 +77,13 @@ describe Ebay::Trading::EbayClient do
   end
   
   
-  #it "should execute a soap request" do
-  #  soap_action = :get_categories
-  #  soap_input = @client.generate_type(@client.operations[:get_categories][:input])
-  #  soap_input.should_not be_nil
-  #  
-  #  soap_output = @client.get_categories(soap_input, {})
-  #  soap_output.should_not be_nil
-  #end
+  it "should execute a soap request" do
+    soap_action = :get_categories
+    soap_input = @client.generate_type(@client.operations[:get_categories][:input])
+    soap_input.should_not be_nil
+    
+    soap_output = @client.get_categories(soap_input, {})
+    soap_output.should_not be_nil
+  end
   
 end

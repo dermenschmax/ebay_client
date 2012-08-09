@@ -153,12 +153,21 @@ module Ebay
       def get_categories(soap_input, params)
         set_soap_header()
         
-        @soap_client.wsdl.endpoint = @endpoint + "?callname=#{action}&siteid=#{@site_id}&appid=#{@app_id}&version=#{version}&routing=default"  
+        endpoint = if (EbayClient.route_to_sandbox) then "https://api.sandbox.ebay.com/wsapi"
+                      else "https://api.hier_sollte_prod_stehen.ebay.com/wsapi"
+                      end
         
-        TODO: Hier weiter
-        response = @soap_client.request :urn, action do  
-          soap.body = request_params
-        end
+        action = "GetCategories"
+        
+        @soap_client.wsdl.endpoint = endpoint + "?callname=#{action}&" +
+                                    "siteid=#{EbayClient.site_id}&" +
+                                    "appid=#{EbayClient.app_id}&" + 
+                                    "version=#{EbayClient.version}&routing=default"  
+        
+        #TODO: Hier weiter
+        #response = @soap_client.request :urn, action do  
+        #  soap.body = request_params
+        #end
         
         nil
       end
@@ -199,9 +208,9 @@ module Ebay
       #
       # ------------------------------------------------------------------
       def set_soap_header
-        client.config.soap_header = {
+        @soap_client.config.soap_header = {
           "urn:RequesterCredentials" => {
-            "urn:eBayAuthToken" =>auth_token,  
+            "urn:eBayAuthToken" => EbayClient.auth_token,  
             "urn:Credentials" => {
               "urn:AppId" => EbayClient.app_id, "urn:DevId" => EbayClient.dev_id,
               "urn:AuthCert" => EbayClient.cert_id
