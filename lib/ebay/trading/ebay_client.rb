@@ -10,7 +10,16 @@ require "savon"
 # needed. The parsing is done at the time of creation.
 #
 # The attributes for the authentication are here: app_id, dev_id, cert_id,
-# auth_token. They can be set by requiring a config.rb. 
+# auth_token. They can be set by requiring a config.rb.
+#
+# Some configurations are done on class level:
+#   - the Ebay site (US, Germay, ...)
+#   - authentication
+#   - wsdl stuff
+#   - sandbox
+#
+# You cannot change them for a client instance. Talking to multiple ebays doesn't
+# make any sense to me.
 # ------------------------------------------------------------------------------
 
 
@@ -48,11 +57,12 @@ module Ebay
     
     
       # ------------------------------------------------------------------
-      # 
+      # Sets some defaults in the 
       # ------------------------------------------------------------------      
       def initialize
         EbayClient.wsdl_classes ||= Hash.new()
-        EbayClient.route_to_sandbox = true
+        EbayClient.route_to_sandbox ||= true
+        EbayClient.site_id ||= 77
         
         @wsdl_document = nil
         @soap_client = Savon.client File.expand_path(EbayClient.wsdl_file_name(), __FILE__)
@@ -159,17 +169,18 @@ module Ebay
         
         action = "GetCategories"
         
-        @soap_client.wsdl.endpoint = endpoint + "?callname=#{action}&" +
+        @soap_client.wsdl.endpoint = endpoint + "?" +
+                                    "callname=#{action}&" +
                                     "siteid=#{EbayClient.site_id}&" +
-                                    "appid=#{EbayClient.app_id}&" + 
-                                    "version=#{EbayClient.version}&routing=default"  
+                                    #"appid=#{EbayClient.app_id}&" + 
+                                    "routing=default"  
         
-        #TODO: Hier weiter
-        #response = @soap_client.request :urn, action do  
-        #  soap.body = request_params
-        #end
+        response = @soap_client.request :urn, action do  
+          soap.body = params
+        end
         
-        nil
+        response
+        
       end
       
       

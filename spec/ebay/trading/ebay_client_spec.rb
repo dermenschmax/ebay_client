@@ -8,6 +8,7 @@ describe Ebay::Trading::EbayClient do
   before :each do
     wsdl_file_name = File.expand_path("wsdl/trading/ebay_trading_v777.wsdl")
     Ebay::Trading::EbayClient.wsdl_file_name = wsdl_file_name
+    Ebay::Trading::EbayClient.wsdl_version = 777
     @client = Ebay::Trading::EbayClient.new
   end
   
@@ -77,12 +78,28 @@ describe Ebay::Trading::EbayClient do
   end
   
   
+  it "should keep values set on class level" do
+    Ebay::Trading::EbayClient.site_id = 10
+    Ebay::Trading::EbayClient.site_id.should eq 10
+    
+    c0 = Ebay::Trading::EbayClient.new()
+    Ebay::Trading::EbayClient.site_id.should eq 10
+    
+  end
+  
+  
   it "should execute a soap request" do
     soap_action = :get_categories
     soap_input = @client.generate_type(@client.operations[:get_categories][:input])
     soap_input.should_not be_nil
     
-    soap_output = @client.get_categories(soap_input, {})
+    Ebay::Trading::EbayClient.site_id = 77
+    
+    soap_output = @client.get_categories(soap_input, {"ViewAllNodes" => false, 
+                                   "CategorySiteId" => @ebay_site_id,
+                                   "LevelLimit" => 2,
+                                   "DetailLevel" => "ReturnAll",
+                                   "Version" => 777})
     soap_output.should_not be_nil
   end
   
