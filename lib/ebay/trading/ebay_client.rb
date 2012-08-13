@@ -175,6 +175,7 @@ module Ebay
                                     #"appid=#{EbayClient.app_id}&" + 
                                     "routing=default"  
         
+        
         response = @soap_client.request :urn, action do  
           soap.body = params
         end
@@ -227,9 +228,10 @@ module Ebay
               "urn:AuthCert" => EbayClient.cert_id
             }
         }
-    }
+      }
       end
       
+    
       
     end # ebay_client
     

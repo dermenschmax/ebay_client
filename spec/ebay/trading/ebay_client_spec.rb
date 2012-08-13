@@ -88,19 +88,25 @@ describe Ebay::Trading::EbayClient do
   end
   
   
-  it "should execute a soap request" do
-    soap_action = :get_categories
-    soap_input = @client.generate_type(@client.operations[:get_categories][:input])
-    soap_input.should_not be_nil
-    
-    Ebay::Trading::EbayClient.site_id = 77
-    
-    soap_output = @client.get_categories(soap_input, {"ViewAllNodes" => false, 
-                                   "CategorySiteId" => @ebay_site_id,
-                                   "LevelLimit" => 2,
-                                   "DetailLevel" => "ReturnAll",
-                                   "Version" => 777})
-    soap_output.should_not be_nil
-  end
+  #it "should execute a soap request" do
+  #  soap_action = :get_categories
+  #  soap_input = @client.generate_type(@client.operations[:get_categories][:input])
+  #  soap_input.should_not be_nil
+  #  
+  #  Ebay::Trading::EbayClient.site_id = 77
+  #  
+  #  # the params
+  #  soap_input.detail_level = "ReturnAll"
+  #  soap_input.view_all_nodes = false
+  #  soap_input.level_limit = 2
+  #  soap_input.version = 777
+  #  
+  #  
+  #  soap_output = @client.get_categories(soap_input, {"ViewAllNodes" => false, 
+  #                                 "LevelLimit" => 2,
+  #                                 "DetailLevel" => "ReturnAll",
+  #                                 "Version" => 777})
+  #  soap_output.should_not be_nil
+  #end
   
 end
