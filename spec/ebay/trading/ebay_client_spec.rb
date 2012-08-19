@@ -70,6 +70,9 @@ describe Ebay::Trading::EbayClient do
     
     wsdl_type.level_limit =  1
     wsdl_type.level_limit.should be_equal 1
+    
+    wsdl_type.to_s.should eq wsdl_type_name
+    wsdl_type.class.wsdl_attributes.should include(:level_limit)
   end
   
   
@@ -85,6 +88,23 @@ describe Ebay::Trading::EbayClient do
     c0 = Ebay::Trading::EbayClient.new()
     Ebay::Trading::EbayClient.site_id.should eq 10
     
+  end
+  
+  
+  # generate a type and check the to_xml method
+  it "should generate a CamelCase attributes hash" do
+    wsdl_type_name = @client.operations[:get_categories][:input]
+    wsdl_type = @client.generate_type(wsdl_type_name)
+    
+    wsdl_type.view_all_nodes = false
+    wsdl_type.level_limit = 2
+    wsdl_type.detail_level = "ReturnAll"
+    wsdl_type.version = 777
+    
+    wsdl_type.to_camel_case.should_not be_nil
+    
+    cc = wsdl_type.to_camel_case
+    puts cc
   end
   
   

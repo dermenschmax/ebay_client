@@ -198,21 +198,75 @@ module Ebay
       # The new class is cached.
       # ------------------------------------------------------------------
       def create_type(type_name)
-        
-        wsdl_class = Class.new()
         parser = @wsdl_document.parser
+        class_attributes = Array.new()
         
         parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
+          class_attributes << attr
           
-          wsdl_class.send(:attr_accessor, attr)
         end
+        
+        wsdl_class = create_class_for_wsdl_type(type_name, class_attributes)
         
         EbayClient.wsdl_classes[type_name.to_sym] = wsdl_class
         wsdl_class
       end
       
+      
+      
+      
+      # ------------------------------------------------------------------
+      # This creates a class to represent a wsdl type. It has these features:
+      #
+      #  - attributes that match the wsdl definition
+      #  - to_s prints the wsdl type name  (Parameter class_name)
+      #  - the to_camel_case method generates a hash with CamelCase keys that is
+      #    used for the soap request
+      # ------------------------------------------------------------------
+      def create_class_for_wsdl_type(class_name, attribute_list)
+        
+        new_class = Class.new() do
+        
+          class << self
+            attr_accessor :class_name
+            attr_reader :wsdl_attributes
+          end
+          
+          def to_s
+            self.class.class_name
+          end
+          
+          def to_camel_case
+            h = Hash.new
+            
+            self.class.wsdl_attributes.each() do |attr|
+              
+              cc_attr = ""
+              attr.to_s.each_line("_") do |a|
+                cc_attr += if (a.chomp("_") == "id") then "ID" else a.chomp("_").capitalize end
+              end
+              
+              h[cc_attr] = send(attr)
+            end
+            
+            h
+          end
+          
+          
+          @wsdl_attributes = Array.new()
+          attribute_list.each() do |attr|
+            attr_accessor attr.to_sym
+            @wsdl_attributes << attr
+          end
+          
+        end
+        
+        new_class.class_name = class_name
+        
+        new_class
+      end
       
       
       # ------------------------------------------------------------------
