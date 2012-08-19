@@ -160,7 +160,7 @@ module Ebay
       # Soap Action "GetCategories"
       #  TODO: dynamisch?
       # ------------------------------------------------------------------
-      def get_categories(soap_input, params)
+      def get_categories(soap_input)
         set_soap_header()
         
         endpoint = if (EbayClient.route_to_sandbox) then "https://api.sandbox.ebay.com/wsapi"
@@ -177,7 +177,7 @@ module Ebay
         
         
         response = @soap_client.request :urn, action do  
-          soap.body = params
+          soap.body = soap_input.to_camel_case()
         end
         
         response
@@ -283,6 +283,20 @@ module Ebay
             }
         }
       }
+      end
+      
+      
+      #todo: private
+      public
+      
+      # ------------------------------------------------------------------
+      # Parses the api response and creates the correct wsdl type
+      #
+      # ------------------------------------------------------------------
+      def create_response_type(action, response)
+        
+        
+        nil
       end
       
     

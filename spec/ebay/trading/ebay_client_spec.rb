@@ -104,7 +104,6 @@ describe Ebay::Trading::EbayClient do
     wsdl_type.to_camel_case.should_not be_nil
     
     cc = wsdl_type.to_camel_case
-    puts cc
   end
   
   
@@ -122,11 +121,19 @@ describe Ebay::Trading::EbayClient do
   #  soap_input.version = 777
   #  
   #  
-  #  soap_output = @client.get_categories(soap_input, {"ViewAllNodes" => false, 
-  #                                 "LevelLimit" => 2,
-  #                                 "DetailLevel" => "ReturnAll",
-  #                                 "Version" => 777})
+  #  soap_output = @client.get_categories(soap_input)
   #  soap_output.should_not be_nil
   #end
+  
+  
+  
+  # todo: Methode wird private
+  it "should generate a response type" do
+    wsdl_input_name = @client.operations[:get_categories][:input]
+    wsdl_output_name = @client.operations[:get_categories][:output]
+    soap_action = @client.operations[:get_categories][:action]
+    
+    @client.create_response_type(soap_action, "").should_not be_nil
+  end
   
 end
