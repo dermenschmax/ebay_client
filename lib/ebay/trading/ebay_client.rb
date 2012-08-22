@@ -1,5 +1,5 @@
 require "savon"
-
+require "ebay/string_ext/string"
 
 # ------------------------------------------------------------------------------
 # This holds the EbayClient class that handles all communications with the
@@ -201,6 +201,7 @@ module Ebay
         parser = @wsdl_document.parser
         class_attributes = Array.new()
         
+        puts "[create_type] looking up type name: #{type_name}"
         parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
@@ -243,10 +244,7 @@ module Ebay
             
             self.class.wsdl_attributes.each() do |attr|
               
-              cc_attr = ""
-              attr.to_s.each_line("_") do |a|
-                cc_attr += if (a.chomp("_") == "id") then "ID" else a.chomp("_").capitalize end
-              end
+              cc_attr = attr.to_s.to_camel_case
               
               h[cc_attr] = send(attr)
             end
@@ -290,13 +288,83 @@ module Ebay
       public
       
       # ------------------------------------------------------------------
-      # Parses the api response and creates the correct wsdl type
+      # Creates an object tree from the ebay response. The action is not relevant,
+      # we're relying only on the response. The input parameter is expected to be
+      # a hash with one or more keys. The following steps are done once per key
+      # (typically there's only one)
       #
+      # The method calls itself recursivly. So be careful...
+      #
+      # 1. step: create a (wsdl-) type that matches the key of the hash.
+      #          the hash is expected to be something like {:wsdl_name => {attributes}}
+      #
+      # 2. step: process the attributes of the type. The work is handed to a second
+      #          method. In case of structured attributes even more methods appear.
       # ------------------------------------------------------------------
-      def create_response_type(action, response)
+      def create_response_type(response_hash)
+        response_type = nil
         
+        response_hash.each_pair do |key, val|
         
-        nil
+          puts "[create_response_type] key, val: #{key}, #{val.class}"
+          
+          response_type_name = key.to_s + "_type"
+          response_type = generate_type(response_type_name.to_camel_case)
+          
+          handle_response_types_attributes(response_type, val)
+          
+        end
+        
+        response_type
+      end
+      
+      
+      # ------------------------------------------------------------------
+      # This fills the attributes of the wsdl-instance. We're filtering the
+      # @xmlns attribute.
+      #
+      # There are three cases to watch out:
+      #   a) the attribute value itself is a hash. We call the create_response_type
+      #      method recursively. This way subtypes are created.
+      #
+      #   b) the attribute value is an array. That is even worse. We have a list of
+      #      subtypes. We fake a hash for each one and call create_response_type.
+      #      The results are collected in an array and attached to the top attribute.
+      #
+      #   c) the attribute value is a simple type. Hey that's easy, simply set the
+      #      value.
+      # ------------------------------------------------------------------
+      def handle_response_types_attributes(type_instance, attributes)
+        
+        attributes.each_pair do |attr, attr_val|
+            
+            unless (attr.to_s == "@xmlns")
+            
+              puts "attr: #{attr} is #{attr_val.class.to_s}"
+            
+              v = if (attr_val.class == Hash) then
+                
+                puts "creating hash subtype: #{attr}"
+                create_response_type({attr => attr_val})
+              
+              elsif (attr_val.class == Array) then
+                puts "creating array subtype: #{attr}"
+                a = Array.new()
+                
+                attr_val.each() do |i|
+                  h = Hash.new
+                  h[attr] = i
+                  a << create_response_type(h)  
+                end
+                
+                a
+              else
+                attr_val
+              end
+              
+              type_instance.send("#{attr}=", v) 
+            end
+          end
       end
       
     

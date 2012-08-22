@@ -1,5 +1,7 @@
 require "ebay/trading/ebay_client"
 require "config/config"
+require "savon"
+require "hashie"
 
 
 describe Ebay::Trading::EbayClient do
@@ -133,7 +135,53 @@ describe Ebay::Trading::EbayClient do
     wsdl_output_name = @client.operations[:get_categories][:output]
     soap_action = @client.operations[:get_categories][:action]
     
-    @client.create_response_type(soap_action, "").should_not be_nil
+    resp = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <soapenv:Body>
+  <GetCategoriesResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+   <Timestamp>2012-08-19T12:24:23.786Z</Timestamp>
+   <Ack>Success</Ack>
+   <Version>785</Version>
+   <Build>E785_INTL_BUNDLED_15167907_R1</Build>
+   <CategoryArray>
+    <Category>
+     <CategoryID>45642</CategoryID>
+     <CategoryLevel>2</CategoryLevel>
+     <CategoryName>Nutzfahrzeuge</CategoryName>
+     <CategoryParentID>9800</CategoryParentID>
+     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+     <LeafCategory>true</LeafCategory>
+     <ORPA>true</ORPA>
+    </Category>
+    <Category>
+     <CategoryID>44794</CategoryID>
+     <CategoryLevel>2</CategoryLevel>
+     <CategoryName>Wohnwagen &amp; Wohnmobile</CategoryName>
+     <CategoryParentID>9800</CategoryParentID>
+     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+     <LeafCategory>true</LeafCategory>
+     <ORPA>true</ORPA>
+    </Category>
+   </CategoryArray>
+   <CategoryCount>72</CategoryCount>
+   <UpdateTime>2012-08-14T19:20:20.000Z</UpdateTime>
+   <CategoryVersion>104</CategoryVersion>
+   <MinimumReservePrice>0.0</MinimumReservePrice>
+  </GetCategoriesResponse>
+ </soapenv:Body>
+</soapenv:Envelope>'
+    
+    # we have to fake an HTTPI::Response object
+    http_response = Hashie::Mash.new()
+    http_response.body = resp
+    
+    savon_response = Savon::SOAP::Response.new(Savon.config.clone, http_response)
+        
+    response_type = @client.create_response_type(savon_response.body.to_hash)
+    response_type.should_not be_nil
+    
+    response_type.version.should eq 785.to_s
+    
+    response_type.category_array.to_s.should eq "CategoryArrayType"
   end
   
 end
