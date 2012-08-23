@@ -163,24 +163,34 @@ module Ebay
       def get_categories(soap_input)
         set_soap_header()
         
-        endpoint = if (EbayClient.route_to_sandbox) then "https://api.sandbox.ebay.com/wsapi"
-                      else "https://api.hier_sollte_prod_stehen.ebay.com/wsapi"
-                      end
-        
         action = "GetCategories"
         
-        @soap_client.wsdl.endpoint = endpoint + "?" +
-                                    "callname=#{action}&" +
-                                    "siteid=#{EbayClient.site_id}&" +
-                                    #"appid=#{EbayClient.app_id}&" + 
-                                    "routing=default"  
-        
+        set_wsdl_endpoint(action)
         
         response = @soap_client.request :urn, action do  
           soap.body = soap_input.to_camel_case()
         end
         
-        response
+        #response
+        create_response_type(response.body.to_hash) unless response.nil? || response.body.nil?
+        
+      end
+      
+      
+      # ------------------------------------------------------------------
+      # Executes the action given in the first parameter. The value of the parameter
+      # is used "as-it-is". It should be the CamelCaseVersion.
+      # ------------------------------------------------------------------
+      def execute_soap_action(soap_action, soap_input)
+        set_soap_header()
+        set_wsdl_endpoint(soap_action)
+        
+        response = @soap_client.request :urn, soap_action do  
+          soap.body = soap_input.to_camel_case()
+        end
+        
+        create_response_type(response.body.to_hash) unless response.nil? || response.body.nil?
+        
         
       end
       
@@ -201,7 +211,7 @@ module Ebay
         parser = @wsdl_document.parser
         class_attributes = Array.new()
         
-        puts "[create_type] looking up type name: #{type_name}"
+        #puts "[create_type] looking up type name: #{type_name}"
         parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
@@ -236,6 +246,12 @@ module Ebay
           end
           
           def to_s
+            "#{self.class.class_name.to_s} => {" +
+            self.class.wsdl_attributes.collect {|a| "#{a}: #{self.send(a.to_sym)}"}.join(",") + "}"
+            
+          end
+          
+          def class_name
             self.class.class_name
           end
           
@@ -284,8 +300,20 @@ module Ebay
       end
       
       
-      #todo: private
-      public
+      def set_wsdl_endpoint(soap_action)
+        
+        endpoint = if (EbayClient.route_to_sandbox) then "https://api.sandbox.ebay.com/wsapi"
+                      else "https://api.hier_sollte_prod_stehen.ebay.com/wsapi"
+                      end
+        
+        
+        @soap_client.wsdl.endpoint = endpoint + "?" +
+                                    "callname=#{soap_action}&" +
+                                    "siteid=#{EbayClient.site_id}&" +
+                                    #"appid=#{EbayClient.app_id}&" + 
+                                    "routing=default"  
+      end
+      
       
       # ------------------------------------------------------------------
       # Creates an object tree from the ebay response. The action is not relevant,
@@ -306,7 +334,7 @@ module Ebay
         
         response_hash.each_pair do |key, val|
         
-          puts "[create_response_type] key, val: #{key}, #{val.class}"
+          #puts "[create_response_type] key, val: #{key}, #{val.class}"
           
           response_type_name = key.to_s + "_type"
           response_type = generate_type(response_type_name.to_camel_case)
@@ -342,13 +370,13 @@ module Ebay
             
               puts "attr: #{attr} is #{attr_val.class.to_s}"
             
-              v = if (attr_val.class == Hash) then
+              v= if (attr_val.class == Hash) then
                 
                 puts "creating hash subtype: #{attr}"
                 create_response_type({attr => attr_val})
-              
               elsif (attr_val.class == Array) then
-                puts "creating array subtype: #{attr}"
+                
+                puts "creating array subtype: for key #{attr}"
                 a = Array.new()
                 
                 attr_val.each() do |i|
@@ -359,7 +387,7 @@ module Ebay
                 
                 a
               else
-                attr_val
+                v = attr_val
               end
               
               type_instance.send("#{attr}=", v) 

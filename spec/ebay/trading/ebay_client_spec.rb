@@ -73,7 +73,7 @@ describe Ebay::Trading::EbayClient do
     wsdl_type.level_limit =  1
     wsdl_type.level_limit.should be_equal 1
     
-    wsdl_type.to_s.should eq wsdl_type_name
+    wsdl_type.class_name.should eq wsdl_type_name
     wsdl_type.class.wsdl_attributes.should include(:level_limit)
   end
   
@@ -109,6 +109,15 @@ describe Ebay::Trading::EbayClient do
   end
   
   
+  # Tests a complete soap request to the ebay api with the following features:
+  #
+  #   - use request type to set request parameter
+  #   - action returns a response type that matches the request type
+  #   - the ack value is "Success"
+  #   - test some dependencies in the returned data (eg. num of category
+  #     children == attribute category_size)
+  #   - to limit the response we're using a level limit of 2
+  #
   #it "should execute a soap request" do
   #  soap_action = :get_categories
   #  soap_input = @client.generate_type(@client.operations[:get_categories][:input])
@@ -125,63 +134,93 @@ describe Ebay::Trading::EbayClient do
   #  
   #  soap_output = @client.get_categories(soap_input)
   #  soap_output.should_not be_nil
+  #  soap_output.ack.should eq "Success"
+  #  
+  #  soap_output.class_name.should eq "GetCategoriesResponseType"
+  #  soap_output.category_count.to_i.should eq soap_output.category_array.category.size()
   #end
   
   
   
-  # todo: Methode wird private
-  it "should generate a response type" do
-    wsdl_input_name = @client.operations[:get_categories][:input]
-    wsdl_output_name = @client.operations[:get_categories][:output]
-    soap_action = @client.operations[:get_categories][:action]
+#  # Tests a private method that ist important. It's the construction of the
+#  # response structures
+#  #
+#  it "should generate a response type" do
+#    wsdl_input_name = @client.operations[:get_categories][:input]
+#    wsdl_output_name = @client.operations[:get_categories][:output]
+#    soap_action = @client.operations[:get_categories][:action]
+#    
+#    resp = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+# <soapenv:Body>
+#  <GetCategoriesResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+#   <Timestamp>2012-08-19T12:24:23.786Z</Timestamp>
+#   <Ack>Success</Ack>
+#   <Version>785</Version>
+#   <Build>E785_INTL_BUNDLED_15167907_R1</Build>
+#   <CategoryArray>
+#    <Category>
+#     <CategoryID>45642</CategoryID>
+#     <CategoryLevel>2</CategoryLevel>
+#     <CategoryName>Nutzfahrzeuge</CategoryName>
+#     <CategoryParentID>9800</CategoryParentID>
+#     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+#     <LeafCategory>true</LeafCategory>
+#     <ORPA>true</ORPA>
+#    </Category>
+#    <Category>
+#     <CategoryID>44794</CategoryID>
+#     <CategoryLevel>2</CategoryLevel>
+#     <CategoryName>Wohnwagen &amp; Wohnmobile</CategoryName>
+#     <CategoryParentID>9800</CategoryParentID>
+#     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+#     <LeafCategory>true</LeafCategory>
+#     <ORPA>true</ORPA>
+#    </Category>
+#   </CategoryArray>
+#   <CategoryCount>72</CategoryCount>
+#   <UpdateTime>2012-08-14T19:20:20.000Z</UpdateTime>
+#   <CategoryVersion>104</CategoryVersion>
+#   <MinimumReservePrice>0.0</MinimumReservePrice>
+#  </GetCategoriesResponse>
+# </soapenv:Body>
+#</soapenv:Envelope>'
+#    
+#    # we have to fake an HTTPI::Response object
+#    http_response = Hashie::Mash.new()
+#    http_response.body = resp
+#    
+#    savon_response = Savon::SOAP::Response.new(Savon.config.clone, http_response)
+#        
+#    response_type = @client.send(:create_response_type, savon_response.body.to_hash)
+#    response_type.should_not be_nil
+#    
+#    response_type.version.should eq 785.to_s
+#    
+#    response_type.category_array.class_name.should eq "CategoryArrayType"
+#    response_type.category_array.category.size.should be 2
+#    
+#    #puts "to_s: #{response_type.to_s}"
+#  end
+  
+  
+  # get the features of the category 11071 "Fernseher"
+  it "should get additional information for a single category" do
+    action = :get_category_features
+    wsdl_input_name = @client.operations[action][:input]
+    wsdl_output_name = @client.operations[action][:output]
+    soap_action = @client.operations[action][:action]
     
-    resp = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
- <soapenv:Body>
-  <GetCategoriesResponse xmlns="urn:ebay:apis:eBLBaseComponents">
-   <Timestamp>2012-08-19T12:24:23.786Z</Timestamp>
-   <Ack>Success</Ack>
-   <Version>785</Version>
-   <Build>E785_INTL_BUNDLED_15167907_R1</Build>
-   <CategoryArray>
-    <Category>
-     <CategoryID>45642</CategoryID>
-     <CategoryLevel>2</CategoryLevel>
-     <CategoryName>Nutzfahrzeuge</CategoryName>
-     <CategoryParentID>9800</CategoryParentID>
-     <IntlAutosFixedCat>true</IntlAutosFixedCat>
-     <LeafCategory>true</LeafCategory>
-     <ORPA>true</ORPA>
-    </Category>
-    <Category>
-     <CategoryID>44794</CategoryID>
-     <CategoryLevel>2</CategoryLevel>
-     <CategoryName>Wohnwagen &amp; Wohnmobile</CategoryName>
-     <CategoryParentID>9800</CategoryParentID>
-     <IntlAutosFixedCat>true</IntlAutosFixedCat>
-     <LeafCategory>true</LeafCategory>
-     <ORPA>true</ORPA>
-    </Category>
-   </CategoryArray>
-   <CategoryCount>72</CategoryCount>
-   <UpdateTime>2012-08-14T19:20:20.000Z</UpdateTime>
-   <CategoryVersion>104</CategoryVersion>
-   <MinimumReservePrice>0.0</MinimumReservePrice>
-  </GetCategoriesResponse>
- </soapenv:Body>
-</soapenv:Envelope>'
+    input = @client.generate_type(wsdl_input_name)
     
-    # we have to fake an HTTPI::Response object
-    http_response = Hashie::Mash.new()
-    http_response.body = resp
     
-    savon_response = Savon::SOAP::Response.new(Savon.config.clone, http_response)
-        
-    response_type = @client.create_response_type(savon_response.body.to_hash)
-    response_type.should_not be_nil
-    
-    response_type.version.should eq 785.to_s
-    
-    response_type.category_array.to_s.should eq "CategoryArrayType"
+    # some parameters
+    Ebay::Trading::EbayClient.site_id = 77
+    input.detail_level = "ReturnAll"
+    input.version = 777
+    input.category_id = 11071    # Fernseher
+    input.view_all_nodes = true
+      
+    soap_output = @client.execute_soap_action(soap_action, input)
   end
   
 end
