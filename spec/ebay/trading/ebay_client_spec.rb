@@ -8,9 +8,9 @@ describe Ebay::Trading::EbayClient do
   
   
   before :each do
-    wsdl_file_name = File.expand_path("wsdl/trading/ebay_trading_v777.wsdl")
+    wsdl_file_name = File.expand_path("wsdl/trading/ebay_trading_v787.wsdl")
     Ebay::Trading::EbayClient.wsdl_file_name = wsdl_file_name
-    Ebay::Trading::EbayClient.wsdl_version = 777
+    Ebay::Trading::EbayClient.wsdl_version = 787
     @client = Ebay::Trading::EbayClient.new
   end
   
@@ -142,66 +142,84 @@ describe Ebay::Trading::EbayClient do
   
   
   
-#  # Tests a private method that ist important. It's the construction of the
-#  # response structures
-#  #
-#  it "should generate a response type" do
-#    wsdl_input_name = @client.operations[:get_categories][:input]
-#    wsdl_output_name = @client.operations[:get_categories][:output]
-#    soap_action = @client.operations[:get_categories][:action]
-#    
-#    resp = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-# <soapenv:Body>
-#  <GetCategoriesResponse xmlns="urn:ebay:apis:eBLBaseComponents">
-#   <Timestamp>2012-08-19T12:24:23.786Z</Timestamp>
-#   <Ack>Success</Ack>
-#   <Version>785</Version>
-#   <Build>E785_INTL_BUNDLED_15167907_R1</Build>
-#   <CategoryArray>
-#    <Category>
-#     <CategoryID>45642</CategoryID>
-#     <CategoryLevel>2</CategoryLevel>
-#     <CategoryName>Nutzfahrzeuge</CategoryName>
-#     <CategoryParentID>9800</CategoryParentID>
-#     <IntlAutosFixedCat>true</IntlAutosFixedCat>
-#     <LeafCategory>true</LeafCategory>
-#     <ORPA>true</ORPA>
-#    </Category>
-#    <Category>
-#     <CategoryID>44794</CategoryID>
-#     <CategoryLevel>2</CategoryLevel>
-#     <CategoryName>Wohnwagen &amp; Wohnmobile</CategoryName>
-#     <CategoryParentID>9800</CategoryParentID>
-#     <IntlAutosFixedCat>true</IntlAutosFixedCat>
-#     <LeafCategory>true</LeafCategory>
-#     <ORPA>true</ORPA>
-#    </Category>
-#   </CategoryArray>
-#   <CategoryCount>72</CategoryCount>
-#   <UpdateTime>2012-08-14T19:20:20.000Z</UpdateTime>
-#   <CategoryVersion>104</CategoryVersion>
-#   <MinimumReservePrice>0.0</MinimumReservePrice>
-#  </GetCategoriesResponse>
-# </soapenv:Body>
-#</soapenv:Envelope>'
-#    
-#    # we have to fake an HTTPI::Response object
-#    http_response = Hashie::Mash.new()
-#    http_response.body = resp
-#    
-#    savon_response = Savon::SOAP::Response.new(Savon.config.clone, http_response)
-#        
-#    response_type = @client.send(:create_response_type, savon_response.body.to_hash)
-#    response_type.should_not be_nil
-#    
-#    response_type.version.should eq 785.to_s
-#    
-#    response_type.category_array.class_name.should eq "CategoryArrayType"
-#    response_type.category_array.category.size.should be 2
-#    
-#    #puts "to_s: #{response_type.to_s}"
-#  end
+  # Tests a private method that ist important. It's the construction of the
+  # response structures
+  #
+  it "should generate a response type" do
+    wsdl_input_name = @client.operations[:get_categories][:input]
+    wsdl_output_name = @client.operations[:get_categories][:output]
+    soap_action = @client.operations[:get_categories][:action]
+    
+    resp = '<soapenv:Envelope xmlns:soapenv="http://schemas.xmlsoap.org/soap/envelope/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+ <soapenv:Body>
+  <GetCategoriesResponse xmlns="urn:ebay:apis:eBLBaseComponents">
+   <Timestamp>2012-08-19T12:24:23.786Z</Timestamp>
+   <Ack>Success</Ack>
+   <Version>785</Version>
+   <Build>E785_INTL_BUNDLED_15167907_R1</Build>
+   <CategoryArray>
+    <Category>
+     <CategoryID>45642</CategoryID>
+     <CategoryLevel>2</CategoryLevel>
+     <CategoryName>Nutzfahrzeuge</CategoryName>
+     <CategoryParentID>9800</CategoryParentID>
+     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+     <LeafCategory>true</LeafCategory>
+     <ORPA>true</ORPA>
+    </Category>
+    <Category>
+     <CategoryID>44794</CategoryID>
+     <CategoryLevel>2</CategoryLevel>
+     <CategoryName>Wohnwagen &amp; Wohnmobile</CategoryName>
+     <CategoryParentID>9800</CategoryParentID>
+     <IntlAutosFixedCat>true</IntlAutosFixedCat>
+     <LeafCategory>true</LeafCategory>
+     <ORPA>true</ORPA>
+    </Category>
+   </CategoryArray>
+   <CategoryCount>72</CategoryCount>
+   <UpdateTime>2012-08-14T19:20:20.000Z</UpdateTime>
+   <CategoryVersion>104</CategoryVersion>
+   <MinimumReservePrice>0.0</MinimumReservePrice>
+  </GetCategoriesResponse>
+ </soapenv:Body>
+</soapenv:Envelope>'
+    
+    # we have to fake an HTTPI::Response object
+    http_response = Hashie::Mash.new()
+    http_response.body = resp
+    
+    savon_response = Savon::SOAP::Response.new(Savon.config.clone, http_response)
+        
+    response_type = @client.send(:create_response_type, savon_response.body.to_hash)
+    response_type.should_not be_nil
+    
+    response_type.version.should eq 785.to_s
+    
+    response_type.category_array.class_name.should eq "CategoryArrayType"
+    response_type.category_array.category.size.should be 2
+    
+    #puts "to_s: #{response_type.to_s}"
+  end
   
+  
+  
+  it "should be able to create the correct subtypes for complex elements" do
+
+    @client.check_wasabi_document    
+    subtype = @client.send(:lookup_which_subtype_to_create, "GetCategoryFeaturesResponseType", "Category")
+    subtype.should eq "CategoryFeatureType"
+        
+    subtype = @client.send(:lookup_which_subtype_to_create, "ItemType", :bidding_details)
+    subtype.should eq "BiddingDetailsType"
+    
+    subtype = @client.send(:lookup_which_subtype_to_create, "ItemType", :payment_methods)
+    subtype.should eq "BuyerPaymentMethodCodeType"
+    
+    subtype = @client.send(:lookup_which_subtype_to_create, "GetCategoryFeaturesResponseType", :category_version)
+    subtype.should eq "xs:string"
+    
+  end
   
   # get the features of the category 11071 "Fernseher"
   it "should get additional information for a single category" do

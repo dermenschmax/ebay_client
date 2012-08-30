@@ -14,7 +14,14 @@ module Ebay
           
           camel_case = ""
           str.to_s.each_line("_") do |s|
-            camel_case += if (s.chomp("_") == "id") then "ID" else s.chomp("_").capitalize end
+            camel_case += if (s.chomp("_") == "id") then
+                              "ID"
+            else
+              s.chomp!("_")
+              s[0] = s[0].upcase unless s.nil? || s.empty?
+              
+              s
+            end
           end
           
           camel_case

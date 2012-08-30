@@ -114,11 +114,6 @@ module Ebay
         
         unless (EbayClient.wsdl_file_name.nil?)
           
-          if (@wsdl_document.nil?) then
-            @wsdl_document = Wasabi::Document.new()
-            @wsdl_document.document = EbayClient.wsdl_file_name
-          end
-          
           parser = @wsdl_document.parser
           op = parser.operations
           op.keys.each() do |k|
@@ -201,6 +196,43 @@ module Ebay
       
       
       # ------------------------------------------------------------------
+      # Creates an object tree from the ebay response. The action is not relevant,
+      # we're relying only on the response. The input parameter is expected to be
+      # a hash with one or more keys. The following steps are done once per key
+      # (typically there's only one)
+      #
+      # The method calls itself recursivly. So be careful...
+      #
+      # 1. step: create a (wsdl-) type that matches the key of the hash.
+      #          the hash is expected to be something like {:wsdl_name => {attributes}}
+      #
+      # 2. step: process the attributes of the type. The work is handed to a second
+      #          method. In case of structured attributes even more methods appear.
+      # ------------------------------------------------------------------
+      def create_response_type(response_hash)
+        response_type = nil
+        
+        response_hash.each_pair do |key, val|
+        
+          puts "[create_response_type] key, val: #{key}, #{val.class} (#{val.keys.join(', ')})"
+          
+          response_type_name = if (key.to_s.downcase.end_with?("type")) then
+                                   key.to_s
+                                else
+                                  key.to_s + "_type"
+                                end
+          
+          response_type = generate_type(response_type_name.to_camel_case)
+          
+          fill_response_types_attributes(response_type, response_type_name.to_camel_case, val)
+          
+        end
+        
+        response_type
+      end
+      
+      
+      # ------------------------------------------------------------------
       # Parses the wsdl document and creates a class that matches the requirements
       # for the wsdl complex type for the given name. We generate getters and
       # setters for each attribute.
@@ -211,7 +243,7 @@ module Ebay
         parser = @wsdl_document.parser
         class_attributes = Array.new()
         
-        #puts "[create_type] looking up type name: #{type_name}"
+        puts "[create_type] looking up type name: #{type_name}"
         parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
@@ -226,6 +258,97 @@ module Ebay
       end
       
       
+      # ------------------------------------------------------------------
+      # This fills the attributes of the wsdl-instance. We're filtering the
+      # @xmlns attribute.
+      #
+      # There are three cases to watch out:
+      #   a) the attribute value itself is a hash. We call the create_response_type
+      #      method recursively. This way subtypes are created.
+      #
+      #   b) the attribute value is an array. That is even worse. We have a list of
+      #      subtypes. We fake a hash for each one and call create_response_type.
+      #      The results are collected in an array and attached to the top attribute.
+      #
+      #   c) the attribute value is a simple type. Hey that's easy, simply set the
+      #      value.
+      # ------------------------------------------------------------------
+      def fill_response_types_attributes(type_instance, type_name, attributes)
+        
+        attributes.each_pair do |attr, attr_val|
+            
+            unless (attr.to_s == "@xmlns")
+            
+              puts "attr: #{attr} is #{attr_val.class.to_s}"
+            
+              v= if (attr_val.class == Hash) then
+                
+                puts "creating hash subtype: #{attr} for parent #{type_name}"
+                
+                subtype_to_create = lookup_which_subtype_to_create(type_name, attr.to_s)
+                puts "parser tells us to create this: #{subtype_to_create}"
+                create_response_type({subtype_to_create => attr_val})
+                
+              elsif (attr_val.class == Array) then
+                
+                puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
+                a = Array.new()
+                
+                attr_val.each() do |i|
+                  h = Hash.new
+                  h[attr] = i
+                  a << create_response_type(h)  
+                end
+                
+                a
+              else
+                v = attr_val
+              end
+              
+              type_instance.send("#{attr}=", v) 
+            end
+          end
+      end      
+      
+      
+      
+      # ------------------------------------------------------------------
+      # Takes the name of the parent element and the attribute and looks into 
+      # the wsdl which type the child has.
+      #
+      # Example:
+      #<xs:complexType name="GetCategoryFeaturesResponseType">
+      #  <xs:complexContent>
+      #    <xs:sequence>
+      #            <xs:element name="CategoryVersion" type="xs:string"></xs:element>
+      #            <xs:element name="UpdateTime" type="xs:dateTime"></xs:element>
+      #            <xs:element name="Category" type="ns:CategoryFeatureType"></xs:element>
+      #            <xs:element name="SiteDefaults" type="ns:SiteDefaultsType"></xs:element>
+      #            <xs:element name="FeatureDefinitions" type="ns:FeatureDefinitionsType"></xs:element>
+      #    </xs:sequence>
+      #  </xs:complexContent>
+      #</xs:complexType>
+      #
+      # lookup_which_subtype_to_create("GetCategoryFeaturesResponseType", "Category")
+      # returns "CategoryFeatureType". The "ns:" is cut off
+      # ------------------------------------------------------------------
+      def lookup_which_subtype_to_create(parent_name, attr_name)
+        begin
+          attr = attr_name.to_s.to_camel_case
+          
+          p = @wsdl_document.parser.types[parent_name]
+          a = p[attr]
+          s = a[:type]
+          
+          subtype = s.gsub(/ns:/, '')
+          
+          subtype
+          
+        rescue Exception => e
+          puts "Exception: #{e.to_s} parent_name: #{parent_name} attr_name: #{attr_name} attr: #{attr}"
+          nil
+        end 
+      end
       
       
       # ------------------------------------------------------------------
@@ -313,88 +436,7 @@ module Ebay
                                     #"appid=#{EbayClient.app_id}&" + 
                                     "routing=default"  
       end
-      
-      
-      # ------------------------------------------------------------------
-      # Creates an object tree from the ebay response. The action is not relevant,
-      # we're relying only on the response. The input parameter is expected to be
-      # a hash with one or more keys. The following steps are done once per key
-      # (typically there's only one)
-      #
-      # The method calls itself recursivly. So be careful...
-      #
-      # 1. step: create a (wsdl-) type that matches the key of the hash.
-      #          the hash is expected to be something like {:wsdl_name => {attributes}}
-      #
-      # 2. step: process the attributes of the type. The work is handed to a second
-      #          method. In case of structured attributes even more methods appear.
-      # ------------------------------------------------------------------
-      def create_response_type(response_hash)
-        response_type = nil
-        
-        response_hash.each_pair do |key, val|
-        
-          #puts "[create_response_type] key, val: #{key}, #{val.class}"
-          
-          response_type_name = key.to_s + "_type"
-          response_type = generate_type(response_type_name.to_camel_case)
-          
-          handle_response_types_attributes(response_type, val)
-          
-        end
-        
-        response_type
-      end
-      
-      
-      # ------------------------------------------------------------------
-      # This fills the attributes of the wsdl-instance. We're filtering the
-      # @xmlns attribute.
-      #
-      # There are three cases to watch out:
-      #   a) the attribute value itself is a hash. We call the create_response_type
-      #      method recursively. This way subtypes are created.
-      #
-      #   b) the attribute value is an array. That is even worse. We have a list of
-      #      subtypes. We fake a hash for each one and call create_response_type.
-      #      The results are collected in an array and attached to the top attribute.
-      #
-      #   c) the attribute value is a simple type. Hey that's easy, simply set the
-      #      value.
-      # ------------------------------------------------------------------
-      def handle_response_types_attributes(type_instance, attributes)
-        
-        attributes.each_pair do |attr, attr_val|
-            
-            unless (attr.to_s == "@xmlns")
-            
-              puts "attr: #{attr} is #{attr_val.class.to_s}"
-            
-              v= if (attr_val.class == Hash) then
-                
-                puts "creating hash subtype: #{attr}"
-                create_response_type({attr => attr_val})
-              elsif (attr_val.class == Array) then
-                
-                puts "creating array subtype: for key #{attr}"
-                a = Array.new()
-                
-                attr_val.each() do |i|
-                  h = Hash.new
-                  h[attr] = i
-                  a << create_response_type(h)  
-                end
-                
-                a
-              else
-                v = attr_val
-              end
-              
-              type_instance.send("#{attr}=", v) 
-            end
-          end
-      end
-      
+
     
       
     end # ebay_client
