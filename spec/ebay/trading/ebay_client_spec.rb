@@ -221,6 +221,7 @@ describe Ebay::Trading::EbayClient do
     
   end
   
+  
   # get the features of the category 11071 "Fernseher"
   it "should get additional information for a single category" do
     action = :get_category_features
@@ -239,6 +240,11 @@ describe Ebay::Trading::EbayClient do
     input.view_all_nodes = true
       
     soap_output = @client.execute_soap_action(soap_action, input)
+    soap_output.should_not be nil
+    soap_output.class_name.should eq wsdl_output_name
   end
+  
+  
+  # TODO: spec für has_complex_types, get_type_name_for schreiben
   
 end

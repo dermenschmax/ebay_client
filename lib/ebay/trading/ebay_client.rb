@@ -94,6 +94,7 @@ module Ebay
         if (@wsdl_document.nil?) then
             @wsdl_document = Wasabi::Document.new()
             @wsdl_document.document = EbayClient.wsdl_file_name
+            @parser = @wsdl_document.parser
         end
       end
 
@@ -114,8 +115,7 @@ module Ebay
         
         unless (EbayClient.wsdl_file_name.nil?)
           
-          parser = @wsdl_document.parser
-          op = parser.operations
+          op = @parser.operations
           op.keys.each() do |k|
             output = op[k][:action]+"ResponseType"
             input = op[k][:action]+"RequestType"
@@ -216,11 +216,7 @@ module Ebay
         
           puts "[create_response_type] key, val: #{key}, #{val.class} (#{val.keys.join(', ')})"
           
-          response_type_name = if (key.to_s.downcase.end_with?("type")) then
-                                   key.to_s
-                                else
-                                  key.to_s + "_type"
-                                end
+          response_type_name = get_type_name_for(key)
           
           response_type = generate_type(response_type_name.to_camel_case)
           
@@ -232,6 +228,15 @@ module Ebay
       end
       
       
+      def get_type_name_for(key)
+        if (key.to_s.downcase.end_with?("type")) then
+          key.to_s
+        else
+          key.to_s + "_type"
+        end
+      end
+      
+      
       # ------------------------------------------------------------------
       # Parses the wsdl document and creates a class that matches the requirements
       # for the wsdl complex type for the given name. We generate getters and
@@ -240,11 +245,10 @@ module Ebay
       # The new class is cached.
       # ------------------------------------------------------------------
       def create_type(type_name)
-        parser = @wsdl_document.parser
         class_attributes = Array.new()
         
         puts "[create_type] looking up type name: #{type_name}"
-        parser.types[type_name].keys.each() do |m|
+        @parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
           class_attributes << attr
@@ -267,8 +271,11 @@ module Ebay
       #      method recursively. This way subtypes are created.
       #
       #   b) the attribute value is an array. That is even worse. We have a list of
-      #      subtypes. We fake a hash for each one and call create_response_type.
-      #      The results are collected in an array and attached to the top attribute.
+      #      subtypes. These subtypes may be complex types or simple ones. To decide
+      #      we peek at the first one. If it's a complex one we fake a hash for 
+      #      each one and call create_response_type. The results are collected in
+      #      an array and attached to the top attribute. If it's a simple one we
+      #      just add the array filled with the values
       #
       #   c) the attribute value is a simple type. Hey that's easy, simply set the
       #      value.
@@ -294,10 +301,16 @@ module Ebay
                 puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
                 a = Array.new()
                 
-                attr_val.each() do |i|
-                  h = Hash.new
-                  h[attr] = i
-                  a << create_response_type(h)  
+                if has_complex_types?(a, attr) then
+                  attr_val.each() do |i|
+                    h = Hash.new
+                    h[attr] = i
+                    a << create_response_type(h)
+                  end
+                else
+                  attr_val.each do |i|
+                    a << i.to_s
+                  end
                 end
                 
                 a
@@ -309,6 +322,20 @@ module Ebay
             end
           end
       end      
+      
+      
+      # ------------------------------------------------------------------
+      # Checks if the first element meets these rules:
+      #
+      #   - it is a hash
+      #   - there's a type for attr in @parser.types
+      # ------------------------------------------------------------------
+      def has_complex_types?(a, attr)
+        
+        attr_type_name = get_type_name_for(attr)
+        
+        !a.nil? && !a.empty? && @parser.types.include?(attr_type_name)
+      end
       
       
       
@@ -336,7 +363,7 @@ module Ebay
         begin
           attr = attr_name.to_s.to_camel_case
           
-          p = @wsdl_document.parser.types[parent_name]
+          p = @parser.types[parent_name]
           a = p[attr]
           s = a[:type]
           
@@ -378,6 +405,7 @@ module Ebay
             self.class.class_name
           end
           
+          
           def to_camel_case
             h = Hash.new
             
@@ -389,6 +417,19 @@ module Ebay
             end
             
             h
+          end
+          
+          
+          def method_missing(name, *args)
+            if args.size == 1 && name.to_s =~ /(.*)=$/
+              
+              attr_name = name.to_s.chomp("=")
+              puts "WARNING setting unknown attribute #{attr_name} to #{args.first} in class #{self.class_name}"
+              
+              return
+            end
+    
+            super
           end
           
           
