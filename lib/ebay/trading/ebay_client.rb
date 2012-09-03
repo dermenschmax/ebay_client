@@ -148,7 +148,7 @@ module Ebay
         
         type_class.new()
       end
-      
+        
       
       # ------------------------------------------------------------------
       # Executes the action given in the first parameter. The value of the parameter
