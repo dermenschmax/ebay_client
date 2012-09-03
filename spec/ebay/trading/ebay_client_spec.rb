@@ -119,8 +119,9 @@ describe Ebay::Trading::EbayClient do
   #   - to limit the response we're using a level limit of 2
   #
   it "should execute a soap request" do
-    soap_action = :get_categories
-    soap_input = @client.generate_type(@client.operations[:get_categories][:input])
+    action = :get_categories
+    soap_action = @client.operations[action][:action]
+    soap_input = @client.generate_type(@client.operations[action][:input])
     soap_input.should_not be_nil
     
     Ebay::Trading::EbayClient.site_id = 77
@@ -132,7 +133,7 @@ describe Ebay::Trading::EbayClient do
     soap_input.version = 777
     
     
-    soap_output = @client.get_categories(soap_input)
+    soap_output = @client.execute_soap_action(soap_action, soap_input)
     soap_output.should_not be_nil
     soap_output.ack.should eq "Success"
     

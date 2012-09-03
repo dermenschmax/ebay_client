@@ -150,28 +150,6 @@ module Ebay
       end
       
       
-      
-      # ------------------------------------------------------------------
-      # Soap Action "GetCategories"
-      #  TODO: dynamisch?
-      # ------------------------------------------------------------------
-      def get_categories(soap_input)
-        set_soap_header()
-        
-        action = "GetCategories"
-        
-        set_wsdl_endpoint(action)
-        
-        response = @soap_client.request :urn, action do  
-          soap.body = soap_input.to_camel_case()
-        end
-        
-        #response
-        create_response_type(response.body.to_hash) unless response.nil? || response.body.nil?
-        
-      end
-      
-      
       # ------------------------------------------------------------------
       # Executes the action given in the first parameter. The value of the parameter
       # is used "as-it-is". It should be the CamelCaseVersion.
