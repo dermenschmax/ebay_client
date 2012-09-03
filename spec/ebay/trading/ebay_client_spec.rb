@@ -118,27 +118,27 @@ describe Ebay::Trading::EbayClient do
   #     children == attribute category_size)
   #   - to limit the response we're using a level limit of 2
   #
-  #it "should execute a soap request" do
-  #  soap_action = :get_categories
-  #  soap_input = @client.generate_type(@client.operations[:get_categories][:input])
-  #  soap_input.should_not be_nil
-  #  
-  #  Ebay::Trading::EbayClient.site_id = 77
-  #  
-  #  # the params
-  #  soap_input.detail_level = "ReturnAll"
-  #  soap_input.view_all_nodes = false
-  #  soap_input.level_limit = 2
-  #  soap_input.version = 777
-  #  
-  #  
-  #  soap_output = @client.get_categories(soap_input)
-  #  soap_output.should_not be_nil
-  #  soap_output.ack.should eq "Success"
-  #  
-  #  soap_output.class_name.should eq "GetCategoriesResponseType"
-  #  soap_output.category_count.to_i.should eq soap_output.category_array.category.size()
-  #end
+  it "should execute a soap request" do
+    soap_action = :get_categories
+    soap_input = @client.generate_type(@client.operations[:get_categories][:input])
+    soap_input.should_not be_nil
+    
+    Ebay::Trading::EbayClient.site_id = 77
+    
+    # the params
+    soap_input.detail_level = "ReturnAll"
+    soap_input.view_all_nodes = false
+    soap_input.level_limit = 2
+    soap_input.version = 777
+    
+    
+    soap_output = @client.get_categories(soap_input)
+    soap_output.should_not be_nil
+    soap_output.ack.should eq "Success"
+    
+    soap_output.class_name.should eq "GetCategoriesResponseType"
+    soap_output.category_count.to_i.should eq soap_output.category_array.category.size()
+  end
   
   
   

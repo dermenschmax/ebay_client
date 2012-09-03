@@ -214,7 +214,7 @@ module Ebay
         
         response_hash.each_pair do |key, val|
         
-          puts "[create_response_type] key, val: #{key}, #{val.class} (#{val.keys.join(', ')})"
+          #puts "[create_response_type] key, val: #{key}, #{val.class} (#{val.keys.join(', ')})"
           
           response_type_name = get_type_name_for(key)
           
@@ -247,7 +247,7 @@ module Ebay
       def create_type(type_name)
         class_attributes = Array.new()
         
-        puts "[create_type] looking up type name: #{type_name}"
+        #puts "[create_type] looking up type name: #{type_name}"
         @parser.types[type_name].keys.each() do |m|
         
           attr = if (m.is_a?(Symbol)) then m else m.snakecase.to_sym end
@@ -286,19 +286,19 @@ module Ebay
             
             unless (attr.to_s == "@xmlns")
             
-              puts "attr: #{attr} is #{attr_val.class.to_s}"
+              #puts "attr: #{attr} is #{attr_val.class.to_s}"
             
               v= if (attr_val.class == Hash) then
                 
-                puts "creating hash subtype: #{attr} for parent #{type_name}"
+                #puts "creating hash subtype: #{attr} for parent #{type_name}"
                 
                 subtype_to_create = lookup_which_subtype_to_create(type_name, attr.to_s)
-                puts "parser tells us to create this: #{subtype_to_create}"
+                #puts "parser tells us to create this: #{subtype_to_create}"
                 create_response_type({subtype_to_create => attr_val})
                 
               elsif (attr_val.class == Array) then
                 
-                puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
+                #puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
                 a = Array.new()
                 
                 if has_complex_types?(a, attr) then
