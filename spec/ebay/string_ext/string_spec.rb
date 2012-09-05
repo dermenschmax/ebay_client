@@ -1,7 +1,7 @@
 require "ebay/string_ext/string"
 
 
-describe Ebay::StringExt::String do
+describe Ebay::StringExt::String, :string => true do
   
   it "should transform snakecase to camelcase" do
     "hello_world".to_camel_case.should eq "HelloWorld"
