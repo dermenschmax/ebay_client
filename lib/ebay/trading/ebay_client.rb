@@ -321,6 +321,9 @@ module Ebay
       # Takes the name of the parent element and the attribute and looks into 
       # the wsdl which type the child has.
       #
+      # First we look for a direkt hit (case sensitive). If nothing is found
+      # we try case insensitive.
+      #
       # Example:
       #<xs:complexType name="GetCategoryFeaturesResponseType">
       #  <xs:complexContent>
@@ -343,6 +346,8 @@ module Ebay
           
           p = @parser.types[parent_name]
           a = p[attr]
+          a = p.select{|pk| pk.downcase == attr.downcase}.values.first if a.nil?
+          
           s = a[:type]
           
           subtype = s.gsub(/ns:/, '')
