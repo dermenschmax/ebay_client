@@ -166,9 +166,7 @@ module Ebay
         
         
       end
-      
-      
-      
+ 
       
       private
       
@@ -264,7 +262,7 @@ module Ebay
             
             unless (attr.to_s == "@xmlns")
             
-              #puts "attr: #{attr} is #{attr_val.class.to_s}"
+              puts "attr: #{attr} is #{attr_val.class.to_s}"
             
               v= if (attr_val.class == Hash) then
                 
@@ -276,16 +274,22 @@ module Ebay
                 
               elsif (attr_val.class == Array) then
                 
-                #puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
+                puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
                 a = Array.new()
                 
                 if has_complex_types?(a, attr) then
+                  
+                  puts "has_complex_types"
+                  
                   attr_val.each() do |i|
                     h = Hash.new
                     h[attr] = i
                     a << create_response_type(h)
                   end
                 else
+                  
+                  puts "does_not_have_complex_types"
+                  
                   attr_val.each do |i|
                     a << i.to_s
                   end
@@ -312,7 +316,7 @@ module Ebay
         
         attr_type_name = get_type_name_for(attr)
         
-        !a.nil? && !a.empty? && @parser.types.include?(attr_type_name)
+        !a.nil? && !a.empty? && !attr_type_name.nil? && @parser.types.include?(attr_type_name.to_camel_case)
       end
       
       

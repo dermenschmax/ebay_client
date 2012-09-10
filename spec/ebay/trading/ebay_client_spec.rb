@@ -557,7 +557,10 @@ describe Ebay::Trading::EbayClient, :complete_trading => true do
     end
     
     
-    
+    # We test complex types in an array.
+    # ShippingServiceOptions should be an Array and it should hold some instance of
+    # ShippingServiceOptionsType
+    # 
     it "should handle complex types in arrays correctly" do
       test_xml = '    <ShippingDetails>
      <ApplyShippingDiscount>false</ApplyShippingDiscount>
@@ -649,9 +652,19 @@ describe Ebay::Trading::EbayClient, :complete_trading => true do
       
 
       input = @client.generate_type("ShippingDetailsType")
+      xml_hash = Nori.parse(test_xml)
       
-      #create_response_type(hash)
+      # some basics
+      rt = @client.send(:create_response_type, xml_hash)
+      rt.should_not be_nil
+      rt.class_name.should eq "ShippingDetailsType"
       
+      # now the interessting stuff
+      rt.shipping_service_options.should_not be_nil
+      rt.shipping_service_options.class.should be Array
+      rt.shipping_service_options.size.should be 3
+      
+      rt.shipping_service_options.first.class_name.should eq "ShippingServiceOptionsType"
     end
     
     
