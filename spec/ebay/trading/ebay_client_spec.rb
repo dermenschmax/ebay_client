@@ -557,6 +557,104 @@ describe Ebay::Trading::EbayClient, :complete_trading => true do
     end
     
     
+    
+    it "should handle complex types in arrays correctly" do
+      test_xml = '    <ShippingDetails>
+     <ApplyShippingDiscount>false</ApplyShippingDiscount>
+     <CalculatedShippingRate>
+      <OriginatingPostalCode>80907</OriginatingPostalCode>
+      <PackageDepth measurementSystem="English" unit="inches">4</PackageDepth>
+      <PackageLength measurementSystem="English" unit="inches">13</PackageLength>
+      <PackageWidth measurementSystem="English" unit="inches">10</PackageWidth>
+      <ShippingIrregular>false</ShippingIrregular>
+      <ShippingPackage>PackageThickEnvelope</ShippingPackage>
+      <WeightMajor measurementSystem="English" unit="lbs">4</WeightMajor>
+      <WeightMinor measurementSystem="English" unit="oz">0</WeightMinor>
+      <InternationalPackagingHandlingCosts currencyID="USD">0.0</InternationalPackagingHandlingCosts>
+     </CalculatedShippingRate>
+     <InsuranceFee currencyID="USD">0.0</InsuranceFee>
+     <InsuranceOption>NotOffered</InsuranceOption>
+     <PaymentInstructions>Please note: This is a Refurbished product. </PaymentInstructions>
+     <SalesTax>
+      <SalesTaxPercent>0.0</SalesTaxPercent>
+      <ShippingIncludedInTax>false</ShippingIncludedInTax>
+     </SalesTax>
+     <ShippingServiceOptions>
+      <ShippingService>Other</ShippingService>
+      <ShippingServiceCost currencyID="USD">0.0</ShippingServiceCost>
+      <ShippingServicePriority>1</ShippingServicePriority>
+      <ExpeditedService>false</ExpeditedService>
+      <ShippingTimeMin>1</ShippingTimeMin>
+      <ShippingTimeMax>10</ShippingTimeMax>
+      <FreeShipping>true</FreeShipping>
+     </ShippingServiceOptions>
+     <ShippingServiceOptions>
+      <ShippingService>ShippingMethodStandard</ShippingService>
+      <ShippingServiceCost currencyID="USD">1.99</ShippingServiceCost>
+      <ShippingServicePriority>2</ShippingServicePriority>
+      <ExpeditedService>false</ExpeditedService>
+      <ShippingTimeMin>1</ShippingTimeMin>
+      <ShippingTimeMax>5</ShippingTimeMax>
+     </ShippingServiceOptions>
+     <ShippingServiceOptions>
+      <ShippingService>ShippingMethodExpress</ShippingService>
+      <ShippingServiceCost currencyID="USD">8.06</ShippingServiceCost>
+      <ShippingServicePriority>3</ShippingServicePriority>
+      <ExpeditedService>false</ExpeditedService>
+      <ShippingTimeMin>1</ShippingTimeMin>
+      <ShippingTimeMax>3</ShippingTimeMax>
+     </ShippingServiceOptions>
+     <InternationalShippingServiceOption>
+      <ShippingService>USPSPriorityMailInternational</ShippingService>
+      <ShippingServicePriority>1</ShippingServicePriority>
+      <ShipToLocation>Worldwide</ShipToLocation>
+     </InternationalShippingServiceOption>
+     <InternationalShippingServiceOption>
+      <ShippingService>USPSExpressMailInternational</ShippingService>
+      <ShippingServicePriority>2</ShippingServicePriority>
+      <ShipToLocation>Worldwide</ShipToLocation>
+     </InternationalShippingServiceOption>
+     <InternationalShippingServiceOption>
+      <ShippingService>UPSWorldWideExpedited</ShippingService>
+      <ShippingServicePriority>3</ShippingServicePriority>
+      <ShipToLocation>Americas</ShipToLocation>
+      <ShipToLocation>Europe</ShipToLocation>
+      <ShipToLocation>Asia</ShipToLocation>
+      <ShipToLocation>AU</ShipToLocation>
+     </InternationalShippingServiceOption>
+     <ShippingType>FlatDomesticCalculatedInternational</ShippingType>
+     <ThirdPartyCheckout>false</ThirdPartyCheckout>
+     <TaxTable>
+      <TaxJurisdiction>
+       <JurisdictionID>CO</JurisdictionID>
+       <SalesTaxPercent>7.4</SalesTaxPercent>
+       <ShippingIncludedInTax>false</ShippingIncludedInTax>
+      </TaxJurisdiction>
+      <TaxJurisdiction>
+       <JurisdictionID>IN</JurisdictionID>
+       <SalesTaxPercent>7.0</SalesTaxPercent>
+       <ShippingIncludedInTax>true</ShippingIncludedInTax>
+      </TaxJurisdiction>
+     </TaxTable>
+     <InsuranceDetails>
+      <InsuranceOption>NotOffered</InsuranceOption>
+     </InsuranceDetails>
+     <InternationalInsuranceDetails>
+      <InsuranceOption>NotOffered</InsuranceOption>
+     </InternationalInsuranceDetails>
+     <ShippingDiscountProfileID>0</ShippingDiscountProfileID>
+     <InternationalShippingDiscountProfileID>0</InternationalShippingDiscountProfileID>
+     <SellerExcludeShipToLocationsPreference>false</SellerExcludeShipToLocationsPreference>
+    </ShippingDetails>'
+      
+
+      input = @client.generate_type("ShippingDetailsType")
+      
+      #create_response_type(hash)
+      
+    end
+    
+    
   end
   
 end

@@ -220,7 +220,7 @@ module Ebay
       # for the wsdl complex type for the given name. We generate getters and
       # setters for each attribute.
       #
-      # The new class is cached.
+      # The new class is cached. The type_name has to be CamelCase (depends on your wsdl)
       # ------------------------------------------------------------------
       def create_type(type_name)
         class_attributes = Array.new()
