@@ -262,7 +262,7 @@ module Ebay
             
             unless (attr.to_s == "@xmlns")
             
-              puts "attr: #{attr} is #{attr_val.class.to_s}"
+              #puts "attr: #{attr} is #{attr_val.class.to_s}"
             
               v= if (attr_val.class == Hash) then
                 
@@ -273,29 +273,8 @@ module Ebay
                 create_response_type({subtype_to_create => attr_val})
                 
               elsif (attr_val.class == Array) then
+                handle_array_attribute(attr, attr_val, type_instance)
                 
-                puts "creating array subtype: for key #{attr} for parent #{type_instance.class_name}"
-                a = Array.new()
-                
-                if has_complex_types?(a, attr) then
-                  
-                  puts "has_complex_types"
-                  
-                  attr_val.each() do |i|
-                    h = Hash.new
-                    h[attr] = i
-                    a << create_response_type(h)
-                  end
-                else
-                  
-                  puts "does_not_have_complex_types"
-                  
-                  attr_val.each do |i|
-                    a << i.to_s
-                  end
-                end
-                
-                a
               else
                 v = attr_val
               end
@@ -303,20 +282,64 @@ module Ebay
               type_instance.send("#{attr}=", v) 
             end
           end
-      end      
+      end
       
       
       # ------------------------------------------------------------------
+      # If the attributes value is an array this method comes into play. It checks
+      # if the array holds simple types (Strings) or complex types.
+      #
+      # We return an array with the correct elements.
+      # ------------------------------------------------------------------
+      def handle_array_attribute(attr_key, attr_value, parent_node)
+        #puts "creating array subtype: for key #{attr_key} for parent #{parent_node.class_name}"
+        a = Array.new()
+        
+        if has_complex_types?(attr_key, attr_value) then
+          
+          attr_value.each() do |i|
+            h = Hash.new
+            h[attr_key] = i
+            a << create_response_type(h)
+          end
+        else
+          
+          attr_value.each do |i|
+            a << i.to_s
+          end
+        end
+        
+        a  
+      end
+      
+      
+      # ------------------------------------------------------------------
+      # Checks if there are complex types in the array. For example:
+      #
+      # {:parent => [{:a => "a0", :b => "b0"}, {:a => "a1", :b => "b1"} ] }
+      #
+      # That's an array with complex subtypes. They must have the type described
+      # by "parent". In this case "parent_type".
+      #
+      # {:parent => ["a0", "b0", "a1", "b1"] }
+      #
+      # This is not an array with complex subtypes. There are just Strings.
+      #
       # Checks if the first element meets these rules:
       #
       #   - it is a hash
-      #   - there's a type for attr in @parser.types
+      #   - there's a type for attr in @parser.types (parent in the example)
       # ------------------------------------------------------------------
-      def has_complex_types?(a, attr)
+      def has_complex_types?(attr, attr_val)
+        
+        first_elem = attr_val.first unless attr_val.nil?
         
         attr_type_name = get_type_name_for(attr)
+        #puts "[has_complex_types] first: #{first_elem.class} attr_type_name: #{attr_type_name}"
         
-        !a.nil? && !a.empty? && !attr_type_name.nil? && @parser.types.include?(attr_type_name.to_camel_case)
+        !attr_type_name.nil? && 
+        @parser.types.include?(attr_type_name.to_camel_case) &&
+        !first_elem.nil? && first_elem.class == Hash
       end
       
       
